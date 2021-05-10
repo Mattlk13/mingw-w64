@@ -75,6 +75,7 @@ IDL_SRCS = \
   include/alg.idl \
   include/amstream.idl \
   include/amvideo.idl \
+  include/asyncinfo.idl \
   include/audioclient.idl \
   include/audioendpoints.idl \
   include/audiopolicy.idl \
@@ -92,12 +93,19 @@ IDL_SRCS = \
   include/d3d11_2.idl \
   include/d3d11_3.idl \
   include/d3d11_4.idl \
+  include/d3d11on12.idl \
   include/d3d11sdklayers.idl \
+  include/d3d12.idl \
+  include/d3d12sdklayers.idl \
+  include/d3d12shader.idl \
   include/d3dcommon.idl \
   include/dbgprop.idl \
+  include/dcommon.idl \
   include/dcompanimation.idl \
   include/ddstream.idl \
+  include/dinputd.idl \
   include/dimm.idl \
+  include/directmanipulation.idl \
   include/dispex.idl \
   include/dmodshow.idl \
   include/docobj.idl \
@@ -106,6 +114,11 @@ IDL_SRCS = \
   include/devicetopology.idl \
   include/downloadmgr.idl \
   include/drmexternals.idl \
+  include/dvdif.idl \
+  include/dwrite.idl \
+  include/dwrite_1.idl \
+  include/dwrite_2.idl \
+  include/dwrite_3.idl \
   include/dxgi.idl \
   include/dxgi1_2.idl \
   include/dxgi1_3.idl \
@@ -117,7 +130,9 @@ IDL_SRCS = \
   include/dxgiformat.idl \
   include/dxgitype.idl \
   include/dxva2api.idl \
+  include/dxvahd.idl \
   include/endpointvolume.idl \
+  include/eventtoken.idl \
   include/evr.idl \
   include/exdisp.idl \
   include/filter.idl \
@@ -161,6 +176,8 @@ IDL_SRCS = \
   include/napsystemhealthagent.idl \
   include/napsystemhealthvalidator.idl \
   include/naptypes.idl \
+  include/netcfgn.idl \
+  include/netcfgx.idl \
   include/netfw.idl \
   include/netlistmgr.idl \
   include/objectarray.idl \
@@ -171,6 +188,7 @@ IDL_SRCS = \
   include/portabledevicetypes.idl \
   include/propidl.idl \
   include/propsys.idl \
+  include/rdpencomapi.idl \
   include/regbag.idl \
   include/sapi51.idl \
   include/sapi53.idl \
@@ -180,11 +198,15 @@ IDL_SRCS = \
   include/shldisp.idl \
   include/shobjidl.idl \
   include/shtypes.idl \
+  include/spatialaudioclient.idl \
+  include/spellcheck.idl \
   include/strmif.idl \
   include/structuredquerycondition.idl \
   include/taskschd.idl \
   include/textstor.idl \
   include/thumbcache.idl \
+  include/tlbref.idl \
+  include/tlogstg.idl \
   include/tpcshrd.idl \
   include/tuner.idl \
   include/uianimation.idl \
@@ -193,7 +215,9 @@ IDL_SRCS = \
   include/uiviewsettingsinterop.idl \
   include/unknwn.idl \
   include/unknwnbase.idl \
+  include/urlhist.idl \
   include/urlmon.idl \
+  include/vss.idl \
   include/wbemads.idl \
   include/wbemcli.idl \
   include/wbemdisp.idl \
@@ -205,9 +229,15 @@ IDL_SRCS = \
   include/mmstream.idl \
   include/qedit.idl \
   include/qnetwork.idl \
+  include/relogger.idl \
+  include/rtworkq.idl \
   include/vmr9.idl \
   include/wincodec.idl \
+  include/wincodecsdk.idl \
   include/wmcontainer.idl \
+  include/wmp.idl \
+  include/wmprealestate.idl \
+  include/wmpservices.idl \
   include/wmsbuffer.idl \
   include/wmsdkidl.idl \
   include/wsdattachment.idl \
@@ -219,15 +249,22 @@ IDL_SRCS = \
   include/wsmandisp.idl \
   include/wtypesbase.idl \
   include/windows.foundation.idl \
+  include/windows.foundation.collections.idl \
+  include/windows.media.speechsynthesis.idl \
   include/windows.security.cryptography.idl \
   include/windows.storage.idl \
   include/windows.storage.streams.idl \
   include/windows.system.idl \
   include/windows.system.threading.idl \
+  include/windowscontracts.idl \
   include/wmcodecdsp.idl \
   include/wmdrmsdk.idl \
   include/wpcapi.idl \
   include/wtypes.idl \
+  include/wuapi.idl \
+  include/xapo.idl \
+  include/xaudio2.idl \
+  include/xaudio2fx.idl \
   include/xmllite.idl \
   include/xpsdigitalsignature.idl \
   include/xpsobjectmodel_1.idl \
@@ -241,11 +278,18 @@ TLB_SRCS = \
 
 BUILT_SOURCES = $(IDL_SRCS:.idl=.h) $(TLB_SRCS:.idl=.tlb)
 
-.idl.h: crt/_mingw.h
+%.h: %.idl crt/_mingw.h
 	$(WIDL) -DBOOL=WINBOOL -I$(srcdir)/include -Icrt -I$(srcdir)/crt -h -o $@ $<
 
-.idl.tlb:
+%.tlb: %.idl
 	$(WIDL) -I$(srcdir)/include -t -o $@ $<
+
+%_i.c: %.idl crt/_mingw.h
+	$(WIDL) -DBOOL=WINBOOL -I$(srcdir)/include -Icrt -I$(srcdir)/crt -u -o $@ $<
+
+# following headers are not meant to be generated from IDLs, so override default rule
+include/prsht.h: ;
+include/wincrypt.h: ;
 
 endif
 

@@ -21,7 +21,7 @@ do
 	fi
 done
 
-for f in ppl.l ppl.yy.c ppy.tab.c ppy.tab.h ppy.y preproc.c wpp.c wpp_private.h
+for f in ppl.l ppl.yy.c ppy.tab.c ppy.tab.h ppy.y wpp.c wpp_private.h
 do
 	if [ ! -f $WINE_DIR/libs/wpp/$f ] && [ -f $WINE_BUILD_DIR/libs/wpp/$f ]; then
 		cp $WINE_BUILD_DIR/libs/wpp/$f src/wpp
@@ -31,7 +31,7 @@ do
 done
 
 for f in basetsd.h guiddef.h excpt.h ndrtypes.h poppack.h pshpack1.h pshpack2.h pshpack4.h pshpack8.h threadpoolapiset.h \
-        timezoneapi.h winbase.h windef.h winerror.h winnls.h winnt.h winnt.rh synchapi.h
+        timezoneapi.h winbase.h windef.h winerror.h winnls.h winnt.h winnt.rh synchapi.h winapifamily.h
 do
 	cp $WINE_DIR/include/$f include
 done

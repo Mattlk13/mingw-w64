@@ -5,7 +5,7 @@ set -e
 WINE_DIR=$1
 
 if test -z $WINE_DIR; then
-    echo "Usage: wine-impot.sh wine_dir"
+    echo "Usage: wine-import.sh wine_dir"
     exit 1
 fi
 
@@ -47,6 +47,7 @@ for f in \
 	amaudio.h \
 	audevcod.h \
 	corerror.h \
+	d2dbasetypes.h \
 	d3d10_1shader.h \
 	d3d10effect.h \
 	d3d10misc.h \
@@ -78,6 +79,7 @@ for f in \
 	d3dx9shape.h \
 	d3dx9tex.h \
 	d3dx9xof.h \
+	devpkey.h \
 	dls1.h \
 	dls2.h \
 	dmerror.h \
@@ -96,14 +98,17 @@ for f in \
 	dplobby8.h \
 	dplobby.h \
 	dpnathlp.h \
+	dsconf.h \
 	dshow.h \
 	dvdmedia.h \
 	dxdiag.h \
 	dxerr8.h \
 	dxerr9.h \
 	dxfile.h \
+	dxva.h \
 	errors.h \
 	evcode.h \
+	exdispid.h \
 	mediaerr.h \
 	mscat.h \
 	propkeydef.h \
@@ -115,7 +120,9 @@ for f in \
 	vfwmsgs.h \
 	winhttp.h \
 	winineti.h \
-        xinput.h; do
+	wmpids.h \
+	xapofx.h \
+	xinput.h; do
     import_header $f include
 done
 
@@ -123,22 +130,34 @@ done
 for f in \
 	amstream \
 	amvideo \
+	asyncinfo \
 	austream \
 	ctfutb \
 	d3d10 \
 	d3d10_1 \
 	d3d10sdklayers \
 	d3d11 \
+	d3d11on12 \
 	d3d11_1 \
 	d3d11_2 \
 	d3d11_3 \
 	d3d11_4 \
 	d3d11sdklayers \
+	d3d12 \
+	d3d12sdklayers \
+	d3d12shader \
 	d3dcommon \
+	dcommon \
 	ddstream \
 	devicetopology \
+	directmanipulation \
 	downloadmgr \
 	drmexternals \
+	dvdif \
+	dwrite \
+	dwrite_1 \
+	dwrite_2 \
+	dwrite_3 \
 	dxgi \
 	dxgi1_2 \
 	dxgi1_3 \
@@ -151,28 +170,48 @@ for f in \
 	dxgitype \
 	dxva2api \
 	endpointvolume \
+	eventtoken \
+	exdisp \
 	fusion \
 	icftypes \
 	mediaobj \
+	mfreadwrite \
 	mmdeviceapi \
 	mmstream \
 	mscoree \
 	msctf \
+	mulres \
 	netfw \
 	netlistmgr \
 	objectarray \
 	optary \
 	qedit \
+	relogger \
+	rtworkq \
+	spatialaudioclient \
 	taskschd \
 	thumbcache \
 	uiautomationclient \
 	uiautomationcore \
 	urlhist \
 	vmr9 \
+	wincodec \
+	wincodecsdk \
+	windowscontracts \
+	windows.foundation \
+	windows.foundation.collections \
+	windows.media.speechsynthesis \
 	wmdrmsdk \
+	wmp \
+	wmprealestate \
+	wmpservices \
 	wmsbuffer \
 	wmsdkidl \
 	wpcapi \
+	wuapi \
+	xapo \
+	xaudio2 \
+	xaudio2fx \
 	xmllite; do
     import_idl $f.idl include
 done

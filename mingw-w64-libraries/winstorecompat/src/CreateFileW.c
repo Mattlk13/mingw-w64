@@ -22,7 +22,9 @@
     DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x602 /* CreateFile2 is Win8 APP Family */
+#endif
 
 #define CreateFileW __CreateFileW
 #include <windef.h>
@@ -48,7 +50,7 @@ HANDLE WINAPI CreateFileW(LPCWSTR lpFileName,
 }
 
 #ifdef _X86_
-HANDLE (WINAPI *__MINGW_IMP_SYMBOL(CreateFileW))(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,  LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) asm("__imp__CreateFileW@28") = CreateFileW;
+HANDLE (WINAPI *__MINGW_IMP_SYMBOL(CreateFileW))(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,  LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) __asm__("__imp__CreateFileW@28") = CreateFileW;
 #else
-HANDLE (WINAPI *__MINGW_IMP_SYMBOL(CreateFileW))(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,  LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) asm("__imp_CreateFileW") = CreateFileW;
+HANDLE (WINAPI *__MINGW_IMP_SYMBOL(CreateFileW))(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,  LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) __asm__("__imp_CreateFileW") = CreateFileW;
 #endif

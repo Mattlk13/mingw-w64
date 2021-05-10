@@ -10,10 +10,6 @@
 #define _DLL
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <oscalls.h>
 #include <internal.h>
 #include <stdlib.h>
@@ -44,12 +40,6 @@ extern _CRTALLOC(".CRT$XIZ") _PIFV __xi_z[];
 extern _CRTALLOC(".CRT$XCA") _PVFV __xc_a[];
 extern _CRTALLOC(".CRT$XCZ") _PVFV __xc_z[];
 
-#ifndef HAVE_CTOR_LIST
-__attribute__ (( __section__ (".ctors"), __used__ , aligned(sizeof(void *)))) const void * __CTOR_LIST__ = (void *) -1;
-__attribute__ (( __section__ (".dtors"), __used__ , aligned(sizeof(void *)))) const void * __DTOR_LIST__ = (void *) -1;
-__attribute__ (( __section__ (".ctors.99999"), __used__ , aligned(sizeof(void *)))) const void * __CTOR_END__ = (void *) 0;
-__attribute__ (( __section__ (".dtors.99999"), __used__ , aligned(sizeof(void *)))) const void * __DTOR_END__ = (void *) 0;
-#endif
 
 /* TLS initialization hook.  */
 extern const PIMAGE_TLS_CALLBACK __dyn_tls_init_callback;
@@ -148,7 +138,9 @@ WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 static WINBOOL __DllMainCRTStartup (HANDLE, DWORD, LPVOID);
 
 WINBOOL WINAPI DllMainCRTStartup (HANDLE, DWORD, LPVOID);
+#if defined(__x86_64__) && !defined(__SEH__)
 int __mingw_init_ehandler (void);
+#endif
 
 WINBOOL WINAPI
 DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
@@ -156,8 +148,7 @@ DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
   mingw_app_type = 0;
   if (dwReason == DLL_PROCESS_ATTACH)
     {
-      __security_init_cookie ();
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__SEH__)
       __mingw_init_ehandler ();
 #endif
     }

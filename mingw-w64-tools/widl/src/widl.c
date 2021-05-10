@@ -98,6 +98,8 @@ static const char version_string[] = "Wine IDL Compiler version " PACKAGE_VERSIO
 enum target_cpu target_cpu = CPU_x86;
 #elif defined(__x86_64__)
 enum target_cpu target_cpu = CPU_x86_64;
+#elif defined(__powerpc64__)
+enum target_cpu target_cpu = CPU_POWERPC64;
 #elif defined(__powerpc__)
 enum target_cpu target_cpu = CPU_POWERPC;
 #elif defined(__arm__)
@@ -151,6 +153,7 @@ static char *idfile_name;
 char *temp_name;
 const char *prefix_client = "";
 const char *prefix_server = "";
+static const char *includedir;
 
 int line_number = 1;
 
@@ -249,6 +252,7 @@ static char *dup_basename_token(const char *name, const char *ext)
 
 static void add_widl_version_define(void)
 {
+    char version_str[32];
     unsigned int version;
     const char *p = PACKAGE_VERSION;
 
@@ -267,14 +271,8 @@ static void add_widl_version_define(void)
     if (p)
         version += atoi(p + 1);
 
-    if (version != 0)
-    {
-        char version_str[11];
-        snprintf(version_str, sizeof(version_str), "0x%x", version);
-        wpp_add_define("__WIDL__", version_str);
-    }
-    else
-        wpp_add_define("__WIDL__", NULL);
+    snprintf(version_str, sizeof(version_str), "__WIDL__=0x%x", version);
+    wpp_add_cmdline_define(version_str);
 }
 
 /* set the target platform */
@@ -286,21 +284,23 @@ static void set_target( const char *target )
         enum target_cpu cpu;
     } cpu_names[] =
     {
-        { "i386",    CPU_x86 },
-        { "i486",    CPU_x86 },
-        { "i586",    CPU_x86 },
-        { "i686",    CPU_x86 },
-        { "i786",    CPU_x86 },
-        { "amd64",   CPU_x86_64 },
-        { "x86_64",  CPU_x86_64 },
-        { "powerpc", CPU_POWERPC },
-        { "arm",     CPU_ARM },
-        { "armv5",   CPU_ARM },
-        { "armv6",   CPU_ARM },
-        { "armv7",   CPU_ARM },
-        { "armv7a",  CPU_ARM },
-        { "arm64",   CPU_ARM64 },
-        { "aarch64", CPU_ARM64 },
+        { "i386",           CPU_x86 },
+        { "i486",           CPU_x86 },
+        { "i586",           CPU_x86 },
+        { "i686",           CPU_x86 },
+        { "i786",           CPU_x86 },
+        { "amd64",          CPU_x86_64 },
+        { "x86_64",         CPU_x86_64 },
+        { "powerpc",        CPU_POWERPC },
+        { "powerpc64",      CPU_POWERPC64 },
+        { "powerpc64le",    CPU_POWERPC64 },
+        { "arm",            CPU_ARM },
+        { "armv5",          CPU_ARM },
+        { "armv6",          CPU_ARM },
+        { "armv7",          CPU_ARM },
+        { "armv7a",         CPU_ARM },
+        { "arm64",          CPU_ARM64 },
+        { "aarch64",        CPU_ARM64 },
     };
 
     unsigned int i;
@@ -573,9 +573,30 @@ void write_id_data(const statement_list_t *stmts)
   fclose(idfile);
 }
 
+static void init_argv0_dir( const char *argv0 )
+{
+#ifndef _WIN32
+    char *p, *dir;
+
+#if defined(__linux__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__)
+    dir = realpath( "/proc/self/exe", NULL );
+#elif defined (__FreeBSD__) || defined(__DragonFly__)
+    dir = realpath( "/proc/curproc/file", NULL );
+#else
+    dir = realpath( argv0, NULL );
+#endif
+    if (!dir) return;
+    if (!(p = strrchr( dir, '/' ))) return;
+    if (p == dir) p++;
+    *p = 0;
+    includedir = strmake( "%s/%s", dir, BIN_TO_INCLUDEDIR );
+    free( dir );
+#endif
+}
+
 int main(int argc,char *argv[])
 {
-  int i, optc;
+  int optc;
   int ret = 0;
   int opti = 0;
   char *output_name = NULL;
@@ -586,6 +607,7 @@ int main(int argc,char *argv[])
 #ifdef SIGHUP
   signal( SIGHUP, exit_on_signal );
 #endif
+  init_argv0_dir( argv[0] );
 
   now = time(NULL);
 
@@ -752,15 +774,10 @@ int main(int argc,char *argv[])
   {
       char exe_path[PATH_MAX];
       get_executable_path (argv[0], &exe_path[0], sizeof (exe_path) / sizeof (exe_path[0]));
-      char * rel_to_includedir = get_relative_path (DEFAULT_BINDIR, INCLUDEDIR);
       if (strrchr (exe_path, '/') != NULL) {
           strrchr (exe_path, '/')[1] = '\0';
       }
-      char relocated_default_include_dir[PATH_MAX];
-      strcpy (relocated_default_include_dir, exe_path);
-      strcat (relocated_default_include_dir, rel_to_includedir);
-      simplify_path (&relocated_default_include_dir[0]);
-      wpp_add_include_path(relocated_default_include_dir);
+      wpp_add_include_path(strmake("%s%s/%s", sysroot, exe_path, BIN_TO_INCLUDEDIR));
   }
 
   switch (target_cpu)
@@ -774,6 +791,10 @@ int main(int argc,char *argv[])
       else pointer_size = 8;
       break;
   case CPU_ARM64:
+      if (pointer_size == 4) error( "Cannot build 32-bit code for this CPU\n" );
+      pointer_size = 8;
+      break;
+  case CPU_POWERPC64:
       if (pointer_size == 4) error( "Cannot build 32-bit code for this CPU\n" );
       pointer_size = 8;
       break;
@@ -804,19 +825,17 @@ int main(int argc,char *argv[])
     set_everything(TRUE);
   }
 
-  if (!output_name) output_name = dup_basename(input_name, ".idl");
-
   if (do_header + do_typelib + do_proxies + do_client +
-      do_server + do_regscript + do_idfile + do_dlldata == 1)
+      do_server + do_regscript + do_idfile + do_dlldata == 1 && output_name)
   {
-      if (do_header) header_name = output_name;
-      else if (do_typelib) typelib_name = output_name;
-      else if (do_proxies) proxy_name = output_name;
-      else if (do_client) client_name = output_name;
-      else if (do_server) server_name = output_name;
-      else if (do_regscript) regscript_name = output_name;
-      else if (do_idfile) idfile_name = output_name;
-      else if (do_dlldata) dlldata_name = output_name;
+      if (do_header && !header_name) header_name = output_name;
+      else if (do_typelib && !typelib_name) typelib_name = output_name;
+      else if (do_proxies && !proxy_name) proxy_name = output_name;
+      else if (do_client && !client_name) client_name = output_name;
+      else if (do_server && !server_name) server_name = output_name;
+      else if (do_regscript && !regscript_name) regscript_name = output_name;
+      else if (do_idfile && !idfile_name) idfile_name = output_name;
+      else if (do_dlldata && !dlldata_name) dlldata_name = output_name;
   }
 
   if (!dlldata_name && do_dlldata)
@@ -898,7 +917,7 @@ int main(int argc,char *argv[])
   if (do_regscript) regscript_token = dup_basename_token(regscript_name,"_r.rgs");
 
   add_widl_version_define();
-  wpp_add_define("_WIN32", NULL);
+  wpp_add_cmdline_define("_WIN32=1");
 
   atexit(rm_tempfile);
   if (!no_preprocess)
